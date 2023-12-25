@@ -56,7 +56,9 @@ const TodoList = () => {
           title: newTask,
           image: image,
         })
-        .then((response) => setTasks([...tasks, response.data]))
+        .then((response) => {
+          setTasks([...tasks, response.data]);
+        })
         .catch((error) => console.error('Error adding task:', error));
     }
 
