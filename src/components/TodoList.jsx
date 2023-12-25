@@ -24,7 +24,11 @@ const TodoList = () => {
       .get('https://worried-tux-toad.cyclic.app/api/v1/get-movies')
       .then((response) => {
         console.log('API Response:', response.data);
-        setTasks(response.data);
+        if (Array.isArray(response.data)) {
+          setTasks(response.data);
+        } else {
+          console.error('API response is not an array:', response.data);
+        }
       })
       .catch((error) => console.error('Error fetching tasks:', error));
   }, []);
@@ -41,12 +45,19 @@ const TodoList = () => {
           }
         )
         .then((response) => {
-          setTasks(
-            tasks.map((task) =>
-              task.id === editTask.id ? response.data : task
-            )
-          );
-          setEditTask(null);
+          if (Array.isArray(response.data)) {
+            setTasks(
+              tasks.map((task) =>
+                task.id === editTask.id ? response.data[0] : task
+              )
+            );
+            setEditTask(null);
+          } else {
+            console.error(
+              'Update API response is not an array:',
+              response.data
+            );
+          }
         })
         .catch((error) => console.error('Error updating task:', error));
     } else {
@@ -56,7 +67,13 @@ const TodoList = () => {
           title: newTask,
           image: image,
         })
-        .then((response) => setTasks([...tasks, response.data]))
+        .then((response) => {
+          if (Array.isArray(response.data)) {
+            setTasks([...tasks, response.data[0]]);
+          } else {
+            console.error('Add API response is not an array:', response.data);
+          }
+        })
         .catch((error) => console.error('Error adding task:', error));
     }
 
