@@ -10,12 +10,14 @@ import {
   IconButton,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import BorderColorIcon from '@mui/icons-material/BorderColor';
 
 const TodoList = () => {
   const [tasks, setTasks] = useState([]);
   const [newTask, setNewTask] = useState('');
   const [author, setAuthor] = useState('');
   const [image, setImage] = useState('');
+  const [editTask, setEditTask] = useState(null);
 
   useEffect(() => {
     axios
@@ -28,14 +30,39 @@ const TodoList = () => {
   }, []);
 
   const addTask = () => {
-    axios
-      .post('https://worried-tux-toad.cyclic.app/api/v1/send-movie/', {
-        author: author,
-        title: newTask,
-        image: image,
-      })
-      .then((response) => setTasks([...tasks, response.data]))
-      .catch((error) => console.error('Error adding task:', error));
+    if (editTask) {
+      axios
+        .put(
+          `https://worried-tux-toad.cyclic.app/api/v1/update-movie/${editTask.id}`,
+          {
+            author: author,
+            title: newTask,
+            image: image,
+          }
+        )
+        .then((response) => {
+          setTasks(
+            tasks.map((task) =>
+              task.id === editTask.id ? response.data : task
+            )
+          );
+          setEditTask(null);
+        })
+        .catch((error) => console.error('Error updating task:', error));
+    } else {
+      axios
+        .post('https://worried-tux-toad.cyclic.app/api/v1/send-movie/', {
+          author: author,
+          title: newTask,
+          image: image,
+        })
+        .then((response) => setTasks([...tasks, response.data]))
+        .catch((error) => console.error('Error adding task:', error));
+    }
+
+    setNewTask('');
+    setAuthor('');
+    setImage('');
   };
 
   const deleteTask = (id) => {
@@ -43,6 +70,13 @@ const TodoList = () => {
       .delete(`https://worried-tux-toad.cyclic.app/api/v1/delete-movie/${id}`)
       .then(() => setTasks(tasks.filter((task) => task.id !== id)))
       .catch((error) => console.error('Error deleting task:', error));
+  };
+
+  const startEdit = (task) => {
+    setEditTask(task);
+    setNewTask(task.title);
+    setAuthor(task.author);
+    setImage(task.image);
   };
 
   return (
@@ -66,17 +100,59 @@ const TodoList = () => {
                 alt="Icon"
                 style={{ width: '24px', height: '24px', marginRight: '10px' }}
               />
-              <Link to={`/movies/${task.id}`}>{task.title}</Link>
+              {editTask && editTask.id === task.id ? (
+                <>
+                  <Input
+                    type="text"
+                    value={newTask}
+                    onChange={(e) => setNewTask(e.target.value)}
+                    placeholder="Movie Title"
+                    style={{ marginRight: '10px' }}
+                  />
+                  <Input
+                    type="text"
+                    value={author}
+                    onChange={(e) => setAuthor(e.target.value)}
+                    placeholder="Author"
+                    style={{ marginRight: '10px' }}
+                  />
+                  <Input
+                    type="text"
+                    value={image}
+                    onChange={(e) => setImage(e.target.value)}
+                    placeholder="Image URL"
+                    style={{ marginRight: '10px' }}
+                  />
+                </>
+              ) : (
+                <Link to={`/movies/${task.id}`}>{task.title}</Link>
+              )}
             </div>
             <div>
-              <IconButton
-                variant="outlined"
-                color="error"
-                onClick={() => deleteTask(task.id)}
-                style={{ marginLeft: '10px' }}
-              >
-                <DeleteIcon />
-              </IconButton>
+              {editTask && editTask.id === task.id ? (
+                <Button variant="contained" color="primary" onClick={addTask}>
+                  Update
+                </Button>
+              ) : (
+                <IconButton
+                  variant="outlined"
+                  color="error"
+                  onClick={() => deleteTask(task.id)}
+                  style={{ marginLeft: '10px' }}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              )}
+              {!editTask && (
+                <IconButton
+                  variant="outlined"
+                  color="primary"
+                  onClick={() => startEdit(task)}
+                  style={{ marginLeft: '10px' }}
+                >
+                  <BorderColorIcon />
+                </IconButton>
+              )}
             </div>
           </ListItem>
         ))}
@@ -104,7 +180,7 @@ const TodoList = () => {
           style={{ marginRight: '10px' }}
         />
         <Button variant="contained" color="primary" onClick={addTask}>
-          Add Task
+          {editTask ? 'Update Task' : 'Add Task'}
         </Button>
       </div>
     </div>
