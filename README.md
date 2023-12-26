@@ -24,7 +24,7 @@ This is a simple Todo List application for managing movies. You can add, delete,
 
 ## Deployment
 
-The project is deployed on Vercel. [Live Demo](your-vercel-app-url)
+The project is deployed on Vercel. [Live Demo](https://movie-zeta-five.vercel.app/)
 
 ## License
 
